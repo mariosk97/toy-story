@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Woody 3D Game</title>
+    <link rel="stylesheet" href="./style.css">
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.180.0/examples/jsm/"
+        }
+    }
+    </script>
+
+    <script type="module" src="./script.js"></script>
+</head>
+<body>
+    <div id="hud">
+        <div id="gameTitle">WOODY 3D</div>
+        <div id="status">Φόρτωση Woody...</div>
+        <div id="controls">
+            <span>W A S D / ΒΕΛΑΚΙΑ — Κίνηση</span>
+            <span>SPACE — Άλμα</span>
+        </div>
+    </div>
+</body>
+</html>
