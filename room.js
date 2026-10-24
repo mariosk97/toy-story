@@ -441,6 +441,70 @@ export function createRoom(scene) {
 	addWoodenBlock(-3.0, 3.0, 'Δ', blockColors[3]);
 	addWoodenBlock(-1.8, 3.0, 'Ε', blockColors[4]);
 	addWoodenBlock(-0.6, 3.0, 'Ζ', blockColors[5]);
+	
+	
+    // ------------------------------------
+    // 8. Συλλεκτικά αστεράκια
+    // ------------------------------------
+
+    const starMaterial = new THREE.MeshStandardMaterial({
+        color: 0xffd700,
+        emissive: 0x664400,
+        metalness: 0.2,
+        roughness: 0.5
+    });
+
+    const starPositions = [
+        [-5, 0.8, 0],
+        [2, 0.8, 1],
+        [5, 0.8, -2],
+        [3, 0.8, 5],
+        [-5, 0.8, 5],
+        [5, 0.8, 7]
+    ];
+	
+	
+    for (const [x, y, z] of starPositions) {
+
+		const shape = new THREE.Shape();
+
+		const outerRadius = 0.38;
+		const innerRadius = 0.17;
+
+		for (let i = 0; i < 10; i++) {
+			const angle = (Math.PI / 2) + (i * Math.PI / 5);
+			const radius = i % 2 === 0 ? outerRadius : innerRadius;
+
+			const x = Math.cos(angle) * radius;
+			const y = Math.sin(angle) * radius;
+
+			if (i === 0) {
+				shape.moveTo(x, y);
+			} else {
+				shape.lineTo(x, y);
+			}
+		}
+
+		shape.closePath();
+
+		const geometry = new THREE.ExtrudeGeometry(shape, {
+			depth: 0.08,
+			bevelEnabled: true,
+			bevelThickness: 0.025,
+			bevelSize: 0.02,
+			bevelSegments: 2,
+			steps: 1
+		});
+
+		const star = new THREE.Mesh(geometry, starMaterial);
 
 
+        star.position.set(x, y, z);
+		//star.rotation.x = -Math.PI / 2;
+        star.userData.isStar = true;
+
+        scene.add(star);
+		
+    }
+	
 }

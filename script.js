@@ -7,6 +7,7 @@ import { createWoodyController } from './woody.js';
 // ------------------------------------
 
 const status = document.getElementById('status');
+let score = 0;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xb9d9f5);
@@ -52,6 +53,26 @@ scene.add(sunlight);
 
 createRoom(scene);
 
+const scoreDisplay = document.createElement('div');
+
+scoreDisplay.textContent = 'Αστέρια: 0';
+
+Object.assign(scoreDisplay.style, {
+    position: 'fixed',
+    top: '20px',
+    right: '20px',
+    padding: '12px 20px',
+    background: 'rgba(255, 255, 255, 0.9)',
+    color: '#493324',
+    fontSize: '24px',
+    fontWeight: 'bold',
+    fontFamily: 'Arial, sans-serif',
+    borderRadius: '12px',
+    zIndex: '1000'
+});
+
+document.body.appendChild(scoreDisplay);
+
 const woodyController = createWoodyController({
     scene,
     camera,
@@ -70,9 +91,34 @@ function animate() {
     requestAnimationFrame(animate);
 
     const delta = Math.min(clock.getDelta(), 0.05);
-
+	
     woodyController.update(delta);
+
+    // Συλλογή αστεριών
+    const woody = woodyController.getWoody();
+
+    if (woody) {
+        const stars = scene.children.filter(
+            object => object.userData.isStar
+        );
+
+        for (const star of stars) {
+            // Υπολογίζουμε την οριζόντια απόσταση
+            const dx = woody.position.x - star.position.x;
+            const dz = woody.position.z - star.position.z;
+            const distance = Math.sqrt(dx * dx + dz * dz);
+
+            if (distance < 0.65) {
+                scene.remove(star);
+
+                score++;
+                scoreDisplay.textContent = `Αστέρια: ${score}`;
+            }
+        }
+    }
+
     woodyController.updateCamera(delta);
+
 
     renderer.render(scene, camera);
 }
