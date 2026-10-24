@@ -388,7 +388,8 @@ export function createRoom(scene) {
         );
 
         block.position.set(x, size / 2, z);
-        scene.add(block);
+		block.userData.isWoodenBlock = true;
+		scene.add(block);
 
         // Υφή για το γράμμα στην μπροστινή πλευρά
         const canvas = document.createElement('canvas');

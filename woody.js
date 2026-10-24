@@ -24,6 +24,9 @@ export function createWoodyController({ scene, camera, status }) {
 
     let isGrounded = true;
     let verticalVelocity = 0;
+	let groundHeight = 0;
+	let characterHeight = 1;
+	const collisionRadius = 0.2;
 
     const gravity = 15;
     const jumpStrength = 6;
@@ -77,6 +80,7 @@ export function createWoodyController({ scene, camera, status }) {
     		woody.scale.setScalar(0.25);
             // Κεντράρισμα και τοποθέτηση στο έδαφος
             bounds.setFromObject(woody);
+			characterHeight = bounds.max.y - bounds.min.y;
 
             const center = bounds.getCenter(new THREE.Vector3());
 
@@ -205,59 +209,167 @@ export function createWoodyController({ scene, camera, status }) {
     // 12. Κίνηση χαρακτήρα
     // ------------------------------------
 
-    function updateMovement(delta) {
-        if (!woody || !mixer) return;
+
+	function updateMovement(delta) {
+		if (!woody || !mixer) return;
+
 		mixer.update(delta);
 
-        let moveX = 0;
-        let moveZ = 0;
+		const blocks = scene.children.filter(
+			object => object.userData.isWoodenBlock
+		);
 
-        if (keys['arrowup'] || keys['w']) moveZ -= 1;
-        if (keys['arrowdown'] || keys['s']) moveZ += 1;
-        if (keys['arrowleft'] || keys['a']) moveX -= 1;
-        if (keys['arrowright'] || keys['d']) moveX += 1;
+		let moveX = 0;
+		let moveZ = 0;
 
-        const moving = moveX !== 0 || moveZ !== 0;
+		if (keys['arrowup'] || keys['w']) moveZ -= 1;
+		if (keys['arrowdown'] || keys['s']) moveZ += 1;
+		if (keys['arrowleft'] || keys['a']) moveX -= 1;
+		if (keys['arrowright'] || keys['d']) moveX += 1;
 
-        if (moving) {
-            const length = Math.hypot(moveX, moveZ);
+		const moving = moveX !== 0 || moveZ !== 0;
 
-            moveX /= length;
-            moveZ /= length;
+		if (moving) {
+			const length = Math.hypot(moveX, moveZ);
+			moveX /= length;
+			moveZ /= length;
 
-            woody.position.x += moveX * moveSpeed * delta;
-            woody.position.z += moveZ * moveSpeed * delta;
+			woody.rotation.y = Math.atan2(moveX, moveZ);
+		}
 
-            woody.rotation.y = Math.atan2(moveX, moveZ);
-        }
+		// Έλεγχος αν ο Woody βρίσκεται πάνω από ένα τουβλάκι
+		function isOverBlock(x, z, block) {
+			const half = 0.4;
 
-        // Idle / Walk χωρίς διακοπή του Jump
-        if (isGrounded) {
-            if (moving) {
-                playAnimation('walk');
-            } else {
-                playAnimation('idle');
-            }
-        }
+			const closestX = THREE.MathUtils.clamp(
+				x, block.position.x - half, block.position.x + half
+			);
 
-        // Φυσική άλματος
-        if (!isGrounded) {
-            woody.position.y += verticalVelocity * delta;
-            verticalVelocity -= gravity * delta;
+			const closestZ = THREE.MathUtils.clamp(
+				z, block.position.z - half, block.position.z + half
+			);
 
-            if (woody.position.y <= 0) {
-                woody.position.y = 0;
-                verticalVelocity = 0;
-                isGrounded = true;
+			const dx = x - closestX;
+			const dz = z - closestZ;
 
-                if (moving) {
-                    playAnimation('walk');
-                } else {
-                    playAnimation('idle');
-                }
-            }
-        }
-    }
+			return dx * dx + dz * dz < collisionRadius * collisionRadius;
+		}
+
+		// Έλεγχος σύγκρουσης με τα πλαϊνά ενός τουβλιού
+		function hitsBlock(x, z) {
+			for (const block of blocks) {
+				const top = block.position.y + 0.4;
+				const bottom = block.position.y - 0.4;
+
+				const verticalOverlap =
+					woody.position.y < top - 0.02 &&
+					woody.position.y + characterHeight > bottom + 0.02;
+
+				if (
+					verticalOverlap &&
+					isOverBlock(x, z, block)
+				) {
+					return true;
+				}
+			}
+
+			return false;
+		}
+
+		// Κίνηση σε ξεχωριστούς άξονες, ώστε να μην περνά
+		// μέσα από τις γωνίες των τουβλιών
+		if (moving) {
+			const nextX =
+				woody.position.x + moveX * moveSpeed * delta;
+
+			if (!hitsBlock(nextX, woody.position.z)) {
+				woody.position.x = nextX;
+			}
+
+			const nextZ =
+				woody.position.z + moveZ * moveSpeed * delta;
+
+			if (!hitsBlock(woody.position.x, nextZ)) {
+				woody.position.z = nextZ;
+			}
+		}
+
+		// Αν περπατήσει έξω από ένα τουβλάκι, αρχίζει να πέφτει
+		if (isGrounded && groundHeight > 0) {
+			const stillSupported = blocks.some(block =>
+				Math.abs(block.position.y + 0.4 - groundHeight) < 0.02 &&
+				isOverBlock(woody.position.x, woody.position.z, block)
+			);
+
+			if (!stillSupported) {
+				isGrounded = false;
+				verticalVelocity = 0;
+			}
+		}
+
+		// Animations όταν βρίσκεται στο έδαφος
+		if (isGrounded) {
+			if (moving) {
+				playAnimation('walk');
+			} else {
+				playAnimation('idle');
+			}
+		}
+
+		// Φυσική άλματος και βαρύτητας
+		if (!isGrounded) {
+			const previousY = woody.position.y;
+
+			verticalVelocity -= gravity * delta;
+			woody.position.y += verticalVelocity * delta;
+
+			let landed = false;
+
+			// Προσγείωση στην κορυφή ενός τουβλιού
+			if (verticalVelocity <= 0) {
+				for (const block of blocks) {
+					const top = block.position.y + 0.4;
+
+					const crossedTop =
+						previousY >= top - 0.001 &&
+						woody.position.y <= top;
+
+					if (
+						crossedTop &&
+						isOverBlock(
+							woody.position.x,
+							woody.position.z,
+							block
+						)
+					) {
+						woody.position.y = top;
+						groundHeight = top;
+						landed = true;
+						break;
+					}
+				}
+			}
+
+			// Προσγείωση στο πάτωμα
+			if (!landed && woody.position.y <= 0) {
+				woody.position.y = 0;
+				groundHeight = 0;
+				landed = true;
+			}
+
+			if (landed) {
+				verticalVelocity = 0;
+				isGrounded = true;
+
+				if (moving) {
+					playAnimation('walk');
+				} else {
+					playAnimation('idle');
+				}
+			}
+		}
+	}
+
 
     // ------------------------------------
     // 13. Κάμερα που ακολουθεί τον Woody
