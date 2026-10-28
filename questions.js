@@ -13,11 +13,15 @@ const questionSets = {
             answers: ["Μπλε", "Πράσινο", "Μαύρο"],
             correctAnswer: 1
         },
-        {
-            type: "typing",
-            question: "Πού κελαηδάει το πουλί; Πάνω στο δέντρο ή μέσα στη θάλασσα;",
-            answers: ["πάνω στο δέντρο"]
-        }
+		{
+			type: "typing",
+			question: "Πού κελαηδάει το πουλί;",
+			choices: [
+				"πάνω στο δέντρο",
+				"μέσα στη θάλασσα"
+			],
+			answers: ["πάνω στο δέντρο"]
+		}
     ],
 
     hard: [
@@ -33,11 +37,15 @@ const questionSets = {
             answers: ["Καλοκαίρι", "Φθινόπωρο", "Άνοιξη"],
             correctAnswer: 2
         },
-        {
-            type: "typing",
-            question: "Πού ζει το ψάρι; Στο νερό ή πάνω στα δέντρα;",
-            answers: ["στο νερό"]
-        }
+		{
+			type: "typing",
+			question: "Πού ζει το ψάρι;",
+			choices: [
+				"στο νερό",
+				"πάνω στα δέντρα"
+			],
+			answers: ["στο νερό"]
+		}
     ]
 };
 

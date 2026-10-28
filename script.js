@@ -23,6 +23,7 @@ let activeStar = null;
 let activeQuestion = null;
 
 const starStates = new WeakMap();
+
 const questionQueues = {
     easy: [],
     hard: []
@@ -78,7 +79,6 @@ const woodyController = createWoodyController({
     status
 });
 
-// Ο Woody μένει ακίνητος μέχρι να επιλεγεί δυσκολία.
 woodyController.setMovementLocked(true);
 woodyController.load();
 
@@ -136,7 +136,6 @@ function shuffle(array) {
 }
 
 function getNextQuestion() {
-    // Χρησιμοποιούμε αποκλειστικά το επιλεγμένο επίπεδο.
     const selectedQuestions = questionSets[difficulty];
 
     if (questionQueues[difficulty].length === 0) {
@@ -150,8 +149,8 @@ function getNextQuestion() {
 // 6. Εμφάνιση ερώτησης
 // ------------------------------------
 
-
 function openQuestion(star) {
+
     const state = starStates.get(star);
 
     if (!state || state.questionAsked || state.unlocked) {
@@ -164,12 +163,56 @@ function openQuestion(star) {
 
     woodyController.setMovementLocked(true);
 
-    questionText.textContent = activeQuestion.question;
+    // Εμφάνιση ερώτησης με χρωματιστές επιλογές.
+    questionText.replaceChildren();
+
+    if (
+        activeQuestion.type === 'typing' &&
+        Array.isArray(activeQuestion.choices) &&
+        activeQuestion.choices.length >= 2
+    ) {
+        questionText.append(
+            document.createTextNode(activeQuestion.question + ' ')
+        );
+
+        activeQuestion.choices.forEach((choice, index) => {
+            const span = document.createElement('span');
+
+            span.textContent = choice;
+
+            // Πρώτη επιλογή: πράσινη.
+            // Δεύτερη επιλογή: μπλε.
+            span.style.setProperty(
+                'color',
+                index === 0 ? '#218838' : '#1976D2',
+                'important'
+            );
+
+            span.style.fontSize = '32px';
+            span.style.fontWeight = 'bold';
+
+            questionText.appendChild(span);
+
+            if (index < activeQuestion.choices.length - 1) {
+                questionText.append(
+                    document.createTextNode(' ή ')
+                );
+            }
+
+            questionText.append(
+                document.createTextNode(' ')
+            );
+        });
+    } else {
+        questionText.textContent = activeQuestion.question;
+    }
+
     answersContainer.replaceChildren();
 
     answerFeedback.textContent = '';
     answerFeedback.className = '';
 
+    // Ερωτήσεις πληκτρολόγησης.
     if (activeQuestion.type === 'typing') {
         const input = document.createElement('input');
 
@@ -199,16 +242,14 @@ function openQuestion(star) {
             checkAnswer(input.value);
         });
 
-		input.addEventListener('keydown', event => {
-			// Δεν αφήνουμε τα πλήκτρα που γράφουμε
-			// να φτάνουν στον χειρισμό του Woody.
-			event.stopPropagation();
+        input.addEventListener('keydown', event => {
+            event.stopPropagation();
 
-			if (event.key === 'Enter') {
-				event.preventDefault();
-				checkAnswer(input.value);
-			}
-		});
+            if (event.key === 'Enter') {
+                event.preventDefault();
+                checkAnswer(input.value);
+            }
+        });
 
         answersContainer.append(input, submitButton);
 
@@ -219,6 +260,7 @@ function openQuestion(star) {
         return;
     }
 
+    // Ερωτήσεις πολλαπλής επιλογής.
     activeQuestion.answers.forEach((answer, index) => {
         const button = document.createElement('button');
 
@@ -237,12 +279,9 @@ function openQuestion(star) {
     status.textContent = 'Απάντησε σωστά για να ξεκλειδώσεις το αστέρι.';
 }
 
-
 // ------------------------------------
 // 7. Έλεγχος απάντησης
 // ------------------------------------
-
-
 
 function normalizeAnswer(answer) {
     return answer
@@ -294,8 +333,6 @@ function checkAnswer(answer) {
     woodyController.playCelebration();
 }
 
-
-
 // ------------------------------------
 // 8. Αστέρια και συλλογή
 // ------------------------------------
@@ -306,7 +343,11 @@ const COLLECTION_DISTANCE = 0.65;
 function updateStars() {
     const woody = woodyController.getWoody();
 
-    if (!woody || !difficulty || !questionPanel.classList.contains('hidden')) {
+    if (
+        !woody ||
+        !difficulty ||
+        !questionPanel.classList.contains('hidden')
+    ) {
         return;
     }
 
@@ -331,14 +372,11 @@ function updateStars() {
         const dz = woody.position.z - star.position.z;
         const distance = Math.hypot(dx, dz);
 
-        // Πρώτα εμφανίζεται η ερώτηση.
         if (!state.questionAsked && distance < QUESTION_DISTANCE) {
             openQuestion(star);
             return;
         }
 
-        // Μετά τη σωστή απάντηση, ο Woody πρέπει
-        // να αγγίξει το ξεκλειδωμένο αστέρι.
         if (state.unlocked && distance < COLLECTION_DISTANCE) {
             state.collected = true;
             scene.remove(star);
