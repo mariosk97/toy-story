@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="el">
 <head>
@@ -20,10 +21,39 @@
 <body>
     <div id="hud">
         <div id="gameTitle">WOODY 3D</div>
-        <div id="status">Φόρτωση Woody...</div>
+        <div id="status">Επίλεξε επίπεδο δυσκολίας.</div>
+        <div id="scoreDisplay">Αστέρια: 0</div>
+
         <div id="controls">
             <span>W A S D / ΒΕΛΑΚΙΑ — Κίνηση</span>
             <span>SPACE — Άλμα</span>
+        </div>
+    </div>
+
+    <div id="difficultyPanel" class="overlay">
+        <div class="panel">
+            <h1>Πάμε να παίξουμε!</h1>
+            <p>Διάλεξε επίπεδο δυσκολίας.</p>
+
+            <div class="buttonRow">
+                <button id="easyButton" class="answerButton easyButton">
+                    Εύκολο
+                </button>
+
+                <button id="hardButton" class="answerButton hardButton">
+                    Δύσκολο
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div id="questionPanel" class="overlay hidden">
+        <div class="panel questionBox">
+            <h2 id="questionText">Ερώτηση</h2>
+
+            <div id="answersContainer" class="answersContainer"></div>
+
+            <p id="answerFeedback" aria-live="polite"></p>
         </div>
     </div>
 </body>
