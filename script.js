@@ -3,6 +3,7 @@ import * as THREE from 'three';
 import { createRoom } from './room.js';
 import { createWoodyController } from './woody.js';
 import { questionSets } from './questions.js';
+import { generateLevel, clearGeneratedLevel } from './levelGenerator.js';
 
 // ------------------------------------
 // 1. Βασικές ρυθμίσεις
@@ -21,6 +22,8 @@ let score = 0;
 let difficulty = null;
 let activeStar = null;
 let activeQuestion = null;
+let totalStars = 0;
+let levelCompleted = false;
 
 const starStates = new WeakMap();
 
@@ -31,6 +34,7 @@ const questionQueues = {
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0xb9d9f5);
+
 
 const camera = new THREE.PerspectiveCamera(
     55,
@@ -82,6 +86,123 @@ const woodyController = createWoodyController({
 woodyController.setMovementLocked(true);
 woodyController.load();
 
+
+const completionPanel = document.createElement('div');
+
+completionPanel.style.cssText = `
+    display: none;
+    position: fixed;
+    inset: 0;
+    z-index: 1000;
+    background: rgba(20, 25, 40, 0.75);
+    align-items: center;
+    justify-content: center;
+    font-family: Arial, sans-serif;
+    padding: 20px;
+`;
+
+completionPanel.innerHTML = `
+    <div style="
+        background: white;
+        border-radius: 24px;
+        padding: 35px;
+        text-align: center;
+        max-width: 460px;
+        width: 100%;
+        box-sizing: border-box;
+        box-shadow: 0 10px 35px rgba(0,0,0,0.3);
+    ">
+        <div style="font-size: 64px;">🏆</div>
+
+        <h1 style="color: #e6a700; margin: 10px 0;">
+            Τα κατάφερες!
+        </h1>
+
+        <p style="font-size: 22px; color: #333;">
+            Συγκέντρωσες όλα τα αστέρια!
+        </p>
+
+        <p id="finalScore" style="
+            font-size: 25px;
+            font-weight: bold;
+            color: #49301e;
+        "></p>
+
+        <button id="playAgainButton" style="
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 20px;
+            border: none;
+            border-radius: 12px;
+            background: #4d91d0;
+            color: white;
+            font-size: 19px;
+            font-weight: bold;
+            cursor: pointer;
+        ">
+            Παίξε ξανά
+        </button>
+
+        <button id="chooseLevelButton" style="
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 10px;
+            border: none;
+            border-radius: 12px;
+            background: #63a85c;
+            color: white;
+            font-size: 19px;
+            font-weight: bold;
+            cursor: pointer;
+        ">
+            Επιλογή επιπέδου
+        </button>
+    </div>
+`;
+
+document.body.appendChild(completionPanel);
+
+function completeLevel() {
+    if (levelCompleted) return;
+
+    levelCompleted = true;
+
+    woodyController.setMovementLocked(true);
+
+    questionPanel.classList.add('hidden');
+
+    activeStar = null;
+    activeQuestion = null;
+
+    document.getElementById('finalScore').textContent =
+        `Αστέρια: ${score} / ${totalStars}`;
+
+    completionPanel.style.display = 'flex';
+
+    status.textContent = 'Ολοκλήρωσες το επίπεδο!';
+}
+
+document.getElementById('playAgainButton').addEventListener('click', () => {
+    completionPanel.style.display = 'none';
+    startGame(difficulty);
+});
+
+document.getElementById('chooseLevelButton').addEventListener('click', () => {
+    completionPanel.style.display = 'none';
+    questionPanel.classList.add('hidden');
+    difficultyPanel.classList.remove('hidden');
+
+    woodyController.setMovementLocked(true);
+
+    difficulty = null;
+    activeStar = null;
+    activeQuestion = null;
+
+    status.textContent = 'Επίλεξε επίπεδο δυσκολίας.';
+});
+
 // ------------------------------------
 // 4. Επιλογή επιπέδου δυσκολίας
 // ------------------------------------
@@ -93,6 +214,12 @@ function startGame(selectedDifficulty) {
     }
 
     difficulty = selectedDifficulty;
+	
+	clearGeneratedLevel(scene);
+
+	const levelInfo = generateLevel(scene, selectedDifficulty);
+	totalStars = levelInfo.starCount;
+	levelCompleted = false;
 
     difficultyPanel.classList.add('hidden');
     questionPanel.classList.add('hidden');
@@ -102,6 +229,7 @@ function startGame(selectedDifficulty) {
 
     questionQueues.easy = [];
     questionQueues.hard = [];
+
 
     woodyController.setMovementLocked(false);
 
@@ -338,9 +466,11 @@ function checkAnswer(answer) {
 // ------------------------------------
 
 const QUESTION_DISTANCE = 1.4;
-const COLLECTION_DISTANCE = 0.65;
+const COLLECTION_DISTANCE = 0.45;
 
 function updateStars() {
+	if (levelCompleted) return;	
+	
     const woody = woodyController.getWoody();
 
     if (
@@ -356,6 +486,9 @@ function updateStars() {
     );
 
     for (const star of stars) {
+		//if (star.userData.requiresJump && woody.position.y < 0.65) {
+		//	continue;
+		//}
         if (!starStates.has(star)) {
             starStates.set(star, {
                 questionAsked: false,
@@ -377,17 +510,22 @@ function updateStars() {
             return;
         }
 
-        if (state.unlocked && distance < COLLECTION_DISTANCE) {
-            state.collected = true;
-            scene.remove(star);
+		if (state.unlocked && distance < COLLECTION_DISTANCE) {
+			state.collected = true;
+			scene.remove(star);
 
-            score++;
-            scoreDisplay.textContent = `Αστέρια: ${score}`;
+			score++;
+			scoreDisplay.textContent = `Αστέρια: ${score}`;
 
-            status.textContent = 'Μάζεψες ένα αστέρι!';
+			if (score >= totalStars) {
+				completeLevel();
+				return;
+			}
 
-            return;
-        }
+			status.textContent = 'Μάζεψες ένα αστέρι!';
+
+			return;
+		}
     }
 }
 

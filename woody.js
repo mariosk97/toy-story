@@ -27,6 +27,14 @@ export function createWoodyController({ scene, camera, status }) {
 
     const collisionRadius = 0.2;
 
+	// ------------------------------------
+	// Όρια δωματίου
+	// ------------------------------------
+
+	const roomLimitX = 19.6;
+	const roomMinZ = -9.6;
+	const roomMaxZ = 9.6;
+
     const gravity = 15;
     const jumpStrength = 6;
     const moveSpeed = 2.8;
@@ -359,22 +367,33 @@ export function createWoodyController({ scene, camera, status }) {
             return false;
         }
 
-        // Κίνηση σε ξεχωριστούς άξονες.
-        if (moving) {
-            const nextX =
-                woody.position.x + moveX * moveSpeed * delta;
+		// Κίνηση σε ξεχωριστούς άξονες
+		// με έλεγχο τουβλιών και ορίων δωματίου.
+		if (moving) {
+			const nextX =
+				woody.position.x + moveX * moveSpeed * delta;
 
-            if (!hitsBlock(nextX, woody.position.z)) {
-                woody.position.x = nextX;
-            }
+			// Αριστερός και δεξιός τοίχος
+			if (
+				nextX >= -roomLimitX &&
+				nextX <= roomLimitX &&
+				!hitsBlock(nextX, woody.position.z)
+			) {
+				woody.position.x = nextX;
+			}
 
-            const nextZ =
-                woody.position.z + moveZ * moveSpeed * delta;
+			const nextZ =
+				woody.position.z + moveZ * moveSpeed * delta;
 
-            if (!hitsBlock(woody.position.x, nextZ)) {
-                woody.position.z = nextZ;
-            }
-        }
+			// Πίσω τοίχος και αόρατο μπροστινό όριο
+			if (
+				nextZ >= roomMinZ &&
+				nextZ <= roomMaxZ &&
+				!hitsBlock(woody.position.x, nextZ)
+			) {
+				woody.position.z = nextZ;
+			}
+		}
 
         // Έλεγχος στήριξης πάνω σε τουβλάκι.
         if (isGrounded && groundHeight > 0) {
