@@ -169,6 +169,90 @@ const questionSets = {
             answers: ["Βουρτσίζουμε τα δόντια", "Χτενίζουμε τα μαλλιά", "Σκουπίζουμε το πάτωμα"],
             correctAnswer: 0
         },
+		{
+			type: "multipleChoice",
+			question: "Ο μαθητής _____ το βιβλίο.",
+			answers: ["διαβάζει", "διαβάζω", "διαβάζουν"],
+			correctAnswer: 0
+		},
+		{
+			type: "multipleChoice",
+			question: "_____ ποτήρια υπάρχουν στο τραπέζι;",
+			answers: ["Πόσοι", "Πόσες", "Πόσα"],
+			correctAnswer: 2
+		},
+		{
+			type: "multipleChoice",
+			question: "Η Μαρία _____ ένα τραγούδι.",
+			answers: ["τραγουδάω", "τραγουδάει", "τραγουδούν"],
+			correctAnswer: 1
+		},
+		{
+			type: "multipleChoice",
+			question: "Εμείς _____ στο πάρκο.",
+			answers: ["περπατάμε", "περπατάει", "περπατάω"],
+			correctAnswer: 0
+		},
+		{
+			type: "multipleChoice",
+			question: "_____ παιδιά παίζουν στην αυλή;",
+			answers: ["Πόσοι", "Πόσες", "Πόσα"],
+			correctAnswer: 0
+		},
+		{
+			type: "multipleChoice",
+			question: "Η Ελένη φοράει _____ κόκκινη μπλούζα.",
+			answers: ["ένας", "μία", "ένα"],
+			correctAnswer: 1
+		},
+		{
+			type: "multipleChoice",
+			question: "Τα κορίτσια _____ χορεύουν.",
+			answers: ["όμορφα", "όμορφος", "όμορφη"],
+			correctAnswer: 0
+		},
+		{
+			type: "multipleChoice",
+			question: "Ο Νίκος και ο Γιώργος _____ ποδόσφαιρο.",
+			answers: ["παίζω", "παίζει", "παίζουν"],
+			correctAnswer: 2
+		},
+		{
+			type: "multipleChoice",
+			question: "_____ είναι η τσάντα σου;",
+			answers: ["Πού", "Ποιος", "Πόσοι"],
+			correctAnswer: 0
+		},
+		{
+			type: "multipleChoice",
+			question: "Το κορίτσι πλένει _____ χέρια του.",
+			answers: ["τα", "τους", "τις"],
+			correctAnswer: 0
+		},
+		{
+			type: "multipleChoice",
+			question: "Εγώ _____ κάθε πρωί πρωινό.",
+			answers: ["τρώει", "τρώω", "τρώνε"],
+			correctAnswer: 1
+		},
+		{
+			type: "multipleChoice",
+			question: "_____ μήλα υπάρχουν στο καλάθι;",
+			answers: ["Πόσοι", "Πόσες", "Πόσα"],
+			correctAnswer: 2
+		},
+		{
+			type: "multipleChoice",
+			question: "Ο πατέρας _____ το αυτοκίνητο.",
+			answers: ["οδηγώ", "οδηγούν", "οδηγεί"],
+			correctAnswer: 2
+		},
+		{
+			type: "multipleChoice",
+			question: "Τα παιδιά πηγαίνουν _____ σχολείο.",
+			answers: ["στο", "στη", "στον"],
+			correctAnswer: 0
+		}
     ],
 
     hard: [
